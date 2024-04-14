@@ -20,7 +20,6 @@ def google_search(query: str, top_k: int = 1):
     search = GoogleSearchAPIWrapper(k=top_k)
     return search.results(query, top_k)
 
-import openai
 
 import openai
 
@@ -74,11 +73,33 @@ def executeSteps(steps):
     for step in steps:
         # 对每个步骤执行本地向量库查询
         query_result = query_vector_database(step)
-        # 使用大模型分析步骤内容和查询结果
-        model_response = analyze_with_model(step, query_result)
-        # 保存大模型返回的结果
-        model_responses.append(model_response)
+        # 检查query_result的token数量，如果太长，则进行切割
+        query_result_chunks = chunk_text_by_sentence(query_result)
+        # 初始化一个空字符串用于收集分析结果
+        step_analysis = ""
+        for chunk in query_result_chunks:
+            # 对每个切割后的部分使用大模型进行分析
+            chunk_analysis = analyze_with_model(step, chunk)
+            # 将每个部分的分析结果拼接起来
+            step_analysis += chunk_analysis + " "
+        # 保存拼接后的大模型返回结果
+        model_responses.append(step_analysis.strip())
     return model_responses
+
+def chunk_text_by_sentence(text: str, max_tokens: int = 2048):
+    sentences = text.split('. ')
+    chunks = []
+    current_chunk = []
+
+    for sentence in sentences:
+        if count_tokens('. '.join(current_chunk + [sentence])) <= max_tokens:
+            current_chunk.append(sentence)
+        else:
+            chunks.append('. '.join(current_chunk))
+            current_chunk = [sentence]
+    if current_chunk:
+        chunks.append('. '.join(current_chunk))
+    return chunks
 
 
 # 从URL获取页面内容
