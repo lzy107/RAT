@@ -86,20 +86,7 @@ def executeSteps(steps):
         model_responses.append(step_analysis.strip())
     return model_responses
 
-def chunk_text_by_sentence(text: str, max_tokens: int = 2048):
-    sentences = text.split('. ')
-    chunks = []
-    current_chunk = []
 
-    for sentence in sentences:
-        if count_tokens('. '.join(current_chunk + [sentence])) <= max_tokens:
-            current_chunk.append(sentence)
-        else:
-            chunks.append('. '.join(current_chunk))
-            current_chunk = [sentence]
-    if current_chunk:
-        chunks.append('. '.join(current_chunk))
-    return chunks
 
 
 # 从URL获取页面内容
